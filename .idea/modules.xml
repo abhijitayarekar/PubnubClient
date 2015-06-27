@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file:///media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/PubnubClient.iml" filepath="/media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/PubnubClient.iml" />
+      <module fileurl="file:///media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/mobile/mobile.iml" filepath="/media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/mobile/mobile.iml" />
+      <module fileurl="file:///media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/wear/wear.iml" filepath="/media/75739994-d9da-4485-ad77-295db8f41260/projects/android/PubnubClient/wear/wear.iml" />
+    </modules>
+  </component>
+</project>
