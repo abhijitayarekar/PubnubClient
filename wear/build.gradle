@@ -6,7 +6,7 @@ android {
     buildToolsVersion "22.0.1"
 
     defaultConfig {
-        applicationId "com.pubnubclient"
+        applicationId "com.homelink"
         minSdkVersion 20
         targetSdkVersion 22
         versionCode 1

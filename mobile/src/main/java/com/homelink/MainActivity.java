@@ -1,6 +1,8 @@
-package com.pubnubclient;
+package com.homelink;
 
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -16,14 +18,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.homelink.chat.ChatListAdapter;
+import com.homelink.pubsub.PubSub;
+import com.homelink.pubsub.PubnubImpl;
 import com.pubnub.api.*;
 import org.json.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, PubSub.PubSubListener {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -34,6 +45,26 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+
+    @Override
+    public void onMessage(String channel, JSONObject message) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        List<Fragment> fragments = fragmentManager.getFragments();
+        for (Fragment fragment : fragments)
+            if (fragment instanceof PlaceholderFragment) {
+                PlaceholderFragment phFragment = (PlaceholderFragment) fragment;
+                if ((phFragment).isChatFragment()) {
+                    phFragment.processMsg(message);
+                    break;
+                }
+            }
+
+    }
+
+    @Override
+    public void onPublish(String channel, JSONObject message) {
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +79,10 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        PubnubImpl.init();
+        PubnubImpl.listen(this);
+        PubnubImpl.subscribe("chat");
     }
 
     @Override
@@ -119,6 +154,14 @@ public class MainActivity extends ActionBarActivity
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
 
+        private static Button btnSend;
+        private static EditText inputMsg;
+        private static ListView listViewMessages;
+        private static List<JSONObject> listMessages;
+        private static ChatListAdapter adapter;
+
+        private static Handler UIHandler = new Handler(Looper.getMainLooper());
+
         /**
          * Returns a new instance of this fragment for the given section
          * number.
@@ -137,8 +180,42 @@ public class MainActivity extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
+            if(getArguments().getInt(ARG_SECTION_NUMBER) != 1) {
+                View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+                return rootView;
+            } else {
+                View rootView = inflater.inflate(R.layout.fragment_chat, container, false);
+                btnSend = (Button) rootView.findViewById(R.id.btnSend);
+                inputMsg = (EditText) rootView.findViewById(R.id.inputMsg);
+                listViewMessages = (ListView) rootView.findViewById(R.id.list_view_messages);
+
+                btnSend.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            JSONObject jObj = new JSONObject();
+                            jObj.put("nodeId", "100");
+                            jObj.put("msg", inputMsg.getText().toString());
+
+                            PubnubImpl.publish("chat", jObj);
+
+                            // Clearing the input filed once message was sent
+                            inputMsg.setText("");
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                listMessages = new ArrayList<JSONObject>();
+
+                adapter = new ChatListAdapter(rootView.getContext(), listMessages);
+                listViewMessages.setAdapter(adapter);
+
+                return rootView;
+            }
         }
 
         @Override
@@ -147,6 +224,19 @@ public class MainActivity extends ActionBarActivity
             ((MainActivity) activity).onSectionAttached(
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }
-    }
 
+        public void processMsg(final JSONObject message) {
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listMessages.add(message);
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+        public boolean isChatFragment() {
+            return (getArguments().getInt(ARG_SECTION_NUMBER) == 1 );
+        }
+    }
 }

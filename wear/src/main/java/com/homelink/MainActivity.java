@@ -1,4 +1,4 @@
-package com.pubnubclient;
+package com.homelink;
 
 import android.app.Activity;
 import android.os.Bundle;

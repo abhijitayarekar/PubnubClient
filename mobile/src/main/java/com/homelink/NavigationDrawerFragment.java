@@ -1,4 +1,4 @@
-package com.pubnubclient;
+package com.homelink;
 
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
